@@ -3,63 +3,83 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\ArticleResource;
+use App\Http\Requests\StoreArticleRequest;
+use App\Http\Requests\updateArticleRequest;
+use SebastianBergmann\CodeCoverage\Report\Xml\Totals;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ArticleController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
+    use ApiResponse;
+
     public function index()
     {
-        //
+        $userId = Auth::id();
+        $articles = Article::byPublisher($userId)->paginate(20);
+        return $this->successResponse(
+            'Articles list fetched successfully.',
+            ArticleResource::collection($articles),
+            200,
+            [
+                'total' => $articles->total(),
+                'per_page' => $articles->perPage(),
+                'current_page' => $articles->currentPage(),
+                'last_page' => $articles->lastPage(),
+            ]
+        );
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+
+    public function store(StoreArticleRequest $request)
     {
-        //
+        $userId = Auth::id();
+        $data = $request->validated();
+        $data['publisher_id'] = $userId;
+        $article = Article::create($data);
+        return $this->successResponse('Article Create Successfully.', new ArticleResource($article), 201);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+
+    public function show($id)
     {
-        //
+        try {
+            $userId = Auth::id();
+            $article = Article::byPublisher($userId)->findOrFail($id);
+            return $this->successResponse('Article', new ArticleResource($article), 200);
+        } catch (ModelNotFoundException) {
+            return $this->errorResponse('Article not Found', null, 404);
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Article $article)
+
+    public function update(updateArticleRequest $request, $id)
     {
-        //
+        try {
+            $userId = Auth::id();
+            $data = $request->validated();
+            $article = Article::byPublisher($userId)->findOrFail($id);
+            $article->update($data);
+            return $this->successResponse('Article Updated Successfully.', new ArticleResource($article), 200);
+        } catch (ModelNotFoundException) {
+            return $this->errorResponse('Article not found', null, 404);
+        }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Article $article)
-    {
-        //
-    }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Article $article)
+    public function destroy($id)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Article $article)
-    {
-        //
+        try {
+            $userId = Auth::id();
+            $article = Article::byPublisher($userId)->findOrFail($id);
+            $article->delete();
+            return $this->successResponse('Article deleted successfull', null, 200);
+        } catch (ModelNotFoundException) {
+            return $this->errorResponse('Article not found Or already deleted', null, 404);
+        }
     }
 }

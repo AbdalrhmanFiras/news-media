@@ -2,64 +2,108 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
+use App\Traits\JwtAuth;
 use App\Models\UserProfile;
+use App\Traits\ApiResponse;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\UserProfileResource;
+use App\Http\Requests\StoreUserProfileRequest;
+use App\Http\Requests\UpdateUserProfileRequest;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class UserProfileController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    use ApiResponse;
+
+    public function index() {}
+
+    public function store(StoreUserProfileRequest $request)
     {
-        //
+        $userId = Auth::id();
+        $data = $request->validated();
+        $data['user_id']  = $userId;
+        unset($data['avatar']);
+
+        $profile = UserProfile::create($data);
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            $path = FileHelper::storeFileProfile($file, $userId, 'users');
+            $profile->media()->create([
+                'url'  => $path,
+                'type' => 'avatar'
+            ]);
+        }
+        $profile->load('media');
+        return $this->successResponse(
+            'Profile Completed Successfully.',
+            new UserProfileResource($profile),
+            201
+        );
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+
+    public function show()
     {
-        //
+        $userId = Auth::id();
+
+        try {
+            $profile = UserProfile::with('media')
+                ->where('user_id', $userId)
+                ->firstOrFail();
+
+            return $this->successResponse(
+                'User profile fetched successfully',
+                new UserProfileResource($profile),
+                200
+            );
+        } catch (ModelNotFoundException) {
+            return $this->errorResponse('User does not have a profile yet.', null, 404);
+        }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(UserProfile $userProfile)
+    public function update(UpdateUserProfileRequest $request)
     {
-        //
-    }
+        try {
+            $userId = Auth::id();
+            $data = $request->validated();
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(UserProfile $userProfile)
-    {
-        //
-    }
+            $profile = UserProfile::with('media')
+                ->where('user_id', $userId)
+                ->firstOrFail();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, UserProfile $userProfile)
-    {
-        //
-    }
+            unset($data['avatar']);
+            $profile->update($data);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(UserProfile $userProfile)
-    {
-        //
+            if ($request->hasFile('avatar')) {
+                $file = $request->file('avatar');
+
+                $path = FileHelper::storeAvatar($file, $profile->id, 'users');
+
+                $profile->media()->updateOrCreate(
+                    [
+                        'type'          => 'avatar',
+                        'mediable_id'   => $profile->id,
+                        'mediable_type' => UserProfile::class,
+                    ],
+                    [
+                        'url' => $path,
+                    ]
+                );
+            }
+
+            $profile->load('media');
+
+            return $this->successResponse(
+                'User profile updated successfully.',
+                new UserProfileResource($profile),
+                200
+            );
+        } catch (ModelNotFoundException) {
+            return $this->errorResponse('User does not have a profile yet.', null, 404);
+        }
     }
 }

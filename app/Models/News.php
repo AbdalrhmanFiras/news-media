@@ -13,6 +13,9 @@ class News extends Model
         'status' => ContentStatus::class,
     ];
 
+
+
+
     public function media()
     {
         return $this->morphMany(Media::class, 'mediable');

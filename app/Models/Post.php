@@ -3,17 +3,26 @@
 namespace App\Models;
 
 use App\Enum\ContentStatus;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Post extends Model
 {
-    use HasUuids;
+
+    public function scopeByPublisher($query, $id)
+    {
+        return $query->where('publisher_id', $id);
+    }
+
+    protected $guarded = ['id'];
 
     protected $casts = [
         'status' => ContentStatus::class,
     ];
+
+
 
     public function media()
     {

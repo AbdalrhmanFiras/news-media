@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('publisher_profiles', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->foreignUuid('publisher_id')->constrained('publishers')->cascadeOnDelete();
             $table->string('first_name');
             $table->string('last_name');
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('city');
             $table->string('address');
             $table->text('bio');
-            $table->string('verified')->default('notverified'); // for media
+            $table->string('verified')->default('notverified'); // for profle
             $table->timestamp('bith_date');
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();

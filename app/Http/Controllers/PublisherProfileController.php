@@ -2,64 +2,113 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PublisherProfile;
+use Storage;
+use App\Models\Publisher;
+use Pest\Plugins\Profile;
+use App\Helpers\FileHelper;
+use App\Traits\ApiResponse;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\PublisherProfile;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\PublisherProileResource;
+use App\Http\Resources\PublisherProfileResource;
+use App\Http\Requests\StorePublisherProfileRequest;
+use App\Http\Requests\UpdatePublisherProfileRequest;
 
 class PublisherProfileController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+
+    use ApiResponse;
+
+    //? public/images/publishers/uuid.png
+    public function store(StorePublisherProfileRequest $request)
     {
-        //
+        $userId = Auth::id();
+        $data = $request->validated();
+        $data['publisher_id'] = $userId;
+
+        $profile = PublisherProfile::create($data);
+
+        $file = $request->file('avatar');
+
+        $path = FileHelper::storeFileProfile($file, $userId, 'publishers');
+
+        $profile->media()->create([
+            'url'  => $path,
+            'type' => 'avatar'
+        ]);
+
+        $profile->load('media');
+
+        return $this->successResponse(
+            'Profile Completed Successfully.',
+            new PublisherProfileResource($profile),
+            200
+        );
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function show($id)
     {
-        //
+        $profile = PublisherProfile::with('media')->find($id);
+
+        if (!$profile) {
+            return $this->errorResponse('Profile not found', null, 404);
+        }
+
+        return $this->successResponse(
+            'Profile fetched successfully.',
+            new PublisherProfileResource($profile),
+            200
+        );
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    // public function update(UpdatePublisherProfileRequest $request)
+    // {
+    //     $data = $request->validated();
+    //     $profile = Auth::user()->profile;
+    //     if (!$profile) return $this->errorResponse('Profile not found', null, 404);
+    //     $profile->update($data);
+    //     return $this->successResponse('Profile updated sucessfully.', new PublisherProfileResource($profile->load('media')), 200);
+    // }
+    public function update(UpdatePublisherProfileRequest $request)
     {
-        //
-    }
+        $data = $request->validated();
+        $userId = Auth::id();
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(PublisherProfile $publisherProfile)
-    {
-        //
-    }
+        $profile = PublisherProfile::where('publisher_id', $userId)
+            ->with('media')
+            ->first();
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(PublisherProfile $publisherProfile)
-    {
-        //
-    }
+        if (!$profile) {
+            return $this->errorResponse('Profile not found', null, 404);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, PublisherProfile $publisherProfile)
-    {
-        //
-    }
+        unset($data['avatar']);
+        $profile->update($data);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(PublisherProfile $publisherProfile)
-    {
-        //
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+
+            $path = FileHelper::storeAvatar($file, $profile->id, 'publishers',);
+
+
+            $profile->media()->updateOrCreate(
+                [
+                    'type'          => 'avatar',
+                    'mediable_id'   => $profile->id,
+                    'mediable_type' => PublisherProfile::class,
+                ],
+                [
+                    'url' => $path,
+                ]
+            );
+        }
+
+        return $this->successResponse(
+            'Profile updated successfully.',
+            new PublisherProfileResource($profile->fresh('media')),
+            200
+        );
     }
 }
