@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\FileHelper;
+use Exception;
 use App\Traits\JwtAuth;
+use App\Helpers\FileHelper;
 use App\Models\UserProfile;
 use App\Traits\ApiResponse;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\UserProfileResource;
 use App\Http\Requests\StoreUserProfileRequest;
 use App\Http\Requests\UpdateUserProfileRequest;
@@ -61,6 +62,8 @@ class UserProfileController extends Controller
             );
         } catch (ModelNotFoundException) {
             return $this->errorResponse('User does not have a profile yet.', null, 404);
+        } catch (Exception) {
+            abort(500, 'internel server error');
         }
     }
 
@@ -104,6 +107,8 @@ class UserProfileController extends Controller
             );
         } catch (ModelNotFoundException) {
             return $this->errorResponse('User does not have a profile yet.', null, 404);
+        } catch (Exception) {
+            abort(500, 'internel server error');
         }
     }
 }

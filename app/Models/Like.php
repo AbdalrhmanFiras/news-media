@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Like extends Model
 {
+
+    protected $guarded = ['id'];
+
     public function likeable()
     {
         return $this->morphTo();

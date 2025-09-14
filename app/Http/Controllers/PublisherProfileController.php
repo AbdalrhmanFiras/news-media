@@ -47,10 +47,11 @@ class PublisherProfileController extends Controller
             200
         );
     }
-
-    public function show($id)
+    // add try catch 
+    public function show()
     {
-        $profile = PublisherProfile::with('media')->find($id);
+        $userId = Auth::id();
+        $profile = PublisherProfile::with('media')->where('publisher_id', $userId)->firstOrFail();
 
         if (!$profile) {
             return $this->errorResponse('Profile not found', null, 404);

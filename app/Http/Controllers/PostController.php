@@ -37,7 +37,6 @@ class PostController extends Controller
 
     public function store(StorePostRequest $request)
     {
-
         $data = $request->validated();
         $userId = Auth::id();
         $post = Post::create([
@@ -49,7 +48,7 @@ class PostController extends Controller
             $file = $item['file'];
             $type = $item['type'];
 
-            $path = FileHelper::storeFile($file, $type, 'post',);
+            $path = FileHelper::storeFileMedia($file, $type, 'post', 'public');
             $post->media()->create([
                 'type' => $type,
                 'url'  => $path,

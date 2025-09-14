@@ -18,6 +18,7 @@ class Article extends Model
         return $query->where('publisher_id', $id);
     }
 
+
     public function like()
     {
         return $this->morphMany(Like::class, 'likeabel');

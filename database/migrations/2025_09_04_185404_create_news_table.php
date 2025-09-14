@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('title');
             $table->text('content')->nullable();
             $table->string('status')->default('pending');
+            $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
             $table->timestamp('published_at')->nullable();
             $table->string('source')->nullable();
             $table->timestamps();

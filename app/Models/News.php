@@ -14,6 +14,11 @@ class News extends Model
     ];
 
 
+    public function categorey()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
 
 
     public function media()

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('body');
+            $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
             $table->foreignUuid('publisher_id')->constrained('publishers')->cascadeOnDelete();
             $table->string('status')->default('pending');
             $table->timestamps();

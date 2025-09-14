@@ -34,16 +34,15 @@ class Publisher extends Authenticatable implements JWTSubject
         'password',
     ];
 
-
     public function likes()
     {
-        return $this->hasMany(Like::class);
+        return $this->morphMany(Like::class, 'likeable');
     }
 
 
     public function comments()
     {
-        return $this->hasMany(Comment::class);
+        return $this->morphMany(Comment::class, 'author');
     }
 
 

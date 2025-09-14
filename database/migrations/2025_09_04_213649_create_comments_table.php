@@ -13,8 +13,7 @@ return new class extends Migration
     {
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
-            $table->foreignUuid('user_id')->nullable()->constrained('users')->cascadeOnDelete();
-            $table->foreignUuid('publisher_id')->nullable()->constrained('publishers')->cascadeOnDelete();
+            $table->uuidMorphs('author');
             $table->morphs('commentable');
             $table->text('content');
             $table->timestamps();

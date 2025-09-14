@@ -22,6 +22,10 @@ class Post extends Model
         'status' => ContentStatus::class,
     ];
 
+    public function categorey()
+    {
+        return $this->belongsTo(Category::class);
+    }
 
 
     public function media()
@@ -29,12 +33,17 @@ class Post extends Model
         return $this->morphMany(Media::class, 'mediable');
     }
 
-    public function like()
+    public function likes()
     {
         return $this->morphMany(Like::class, 'likeable');
     }
 
-    public function comment()
+    public function author()
+    {
+        return $this->morphTo();
+    }
+
+    public function comments()
     {
         return $this->morphMany(Comment::class, 'commentable');
     }

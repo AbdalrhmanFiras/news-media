@@ -58,4 +58,15 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+
+    public function comments()
+    {
+        return $this->morphMany(Comment::class, 'author');
+    }
+
+
+    public function likes()
+    {
+        return $this->morphMany(Like::class, 'likeable');
+    }
 }

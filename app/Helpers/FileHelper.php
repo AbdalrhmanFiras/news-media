@@ -23,6 +23,18 @@ class FileHelper
         return $file->storeAs($path, $filename, 'public');
     }
 
+    public static function storeFileMedia($file, $type, string $content, string $disk = 'public')
+    {
+        //* images/post/2002/2/3/uuid.png
+
+        $ext = $file->extension();
+        $date = date('Y/m/d');
+        $filename = (string) Str::uuid() . '.' . $ext;
+        $contentType = $type === 'image' ? 'images' : 'videos';
+        $subdir = "{$contentType}/{$content}/{$date}";
+        return $path = $file->storeAs($subdir, $filename, 'public');
+    }
+
 
 
     ///storage/images/users/{user_id}/avatar.jpg
@@ -59,7 +71,6 @@ class FileHelper
             }
         }
 
-        // Store new avatar
         Storage::disk('public')->put($path, file_get_contents($file));
 
         return $path;
